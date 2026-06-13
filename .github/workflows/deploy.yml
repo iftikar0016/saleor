@@ -28,12 +28,12 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install uv
-          uv pip install -r pyproject.toml --system
+          uv sync --group dev
 
       - name: Run Pytest
         run: |
           # Run tests (excluding db integration tests if DB is not live in the GHA runner env)
-          pytest --ignore=saleor/graphql/product/tests/test_recently_viewed.py
+          uv run pytest --ignore=saleor/graphql/product/tests/test_recently_viewed.py
 
   build-and-deploy:
     name: Build & Deploy to Azure Container Apps
