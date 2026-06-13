@@ -15,6 +15,7 @@ from .product import (
     ProductMediaReorder,
     ProductMediaUpdate,
     ProductUpdate,
+    RecordProductView,
 )
 from .product_type import ProductTypeCreate, ProductTypeDelete, ProductTypeUpdate
 from .product_variant import (
@@ -48,6 +49,7 @@ __all__ = [
     "ProductMediaReorder",
     "ProductMediaUpdate",
     "ProductUpdate",
+    "RecordProductView",
     "ProductVariantCreate",
     "ProductVariantDelete",
     "ProductVariantPreorderDeactivate",

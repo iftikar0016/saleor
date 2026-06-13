@@ -722,3 +722,60 @@ class CollectionTranslation(SeoModelTranslationWithSlug):
             }
         )
         return translated_keys
+
+
+class RecentlyViewedProductManager(models.Manager):
+    def record_view(self, product, user=None, session_key=None):
+        if not user and not session_key:
+            return None
+
+        # Try to find if this product has already been viewed by this user/session
+        if user:
+            view, created = self.get_or_create(user=user, product=product)
+        else:
+            view, created = self.get_or_create(session_key=session_key, product=product)
+
+        # Update the timestamp
+        if not created:
+            view.viewed_at = timezone.now()
+            view.save(update_fields=["viewed_at"])
+
+        # Clean up older views if there are more than 5
+        if user:
+            views = self.filter(user=user)
+        else:
+            views = self.filter(session_key=session_key)
+
+        if views.count() > 5:
+            # Delete any views that are older than the top 5
+            view_ids_to_keep = views.values_list("id", flat=True)[:5]
+            views.exclude(id__in=view_ids_to_keep).delete()
+
+        return view
+
+
+class RecentlyViewedProduct(models.Model):
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="recently_viewed_products",
+    )
+    session_key = models.CharField(max_length=255, null=True, blank=True, db_index=True)
+    product = models.ForeignKey(
+        Product,
+        on_delete=models.CASCADE,
+        related_name="recently_viewed_products",
+    )
+    viewed_at = models.DateTimeField(auto_now=True, db_index=True)
+
+    objects = RecentlyViewedProductManager()
+
+    class Meta:
+        ordering = ["-viewed_at"]
+        indexes = [
+            models.Index(fields=["user", "viewed_at"]),
+            models.Index(fields=["session_key", "viewed_at"]),
+        ]
+

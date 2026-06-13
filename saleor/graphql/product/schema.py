@@ -75,10 +75,11 @@ from .mutations import (
     ProductMediaDelete,
     ProductMediaReorder,
     ProductMediaUpdate,
+    ProductUpdate,
+    RecordProductView,
     ProductTypeCreate,
     ProductTypeDelete,
     ProductTypeUpdate,
-    ProductUpdate,
     ProductVariantCreate,
     ProductVariantDelete,
     ProductVariantPreorderDeactivate,
@@ -248,6 +249,12 @@ class ProductQueries(graphene.ObjectType):
             f"{', '.join([p.name for p in ALL_PRODUCTS_PERMISSIONS])}."
         ),
         doc_category=DOC_CATEGORY_PRODUCTS,
+    )
+    recently_viewed_products = NonNullList(
+        Product,
+        session_key=graphene.String(description="Session key for anonymous users."),
+        channel=graphene.String(description="Slug of a channel for which the data should be returned."),
+        description="List of recently viewed products for the current user or session.",
     )
     product_type = BaseField(
         ProductType,
@@ -515,6 +522,41 @@ class ProductQueries(graphene.ObjectType):
         return _resolve_products(None)
 
     @staticmethod
+    @traced_resolver
+    def resolve_recently_viewed_products(_root, info: ResolveInfo, *, session_key=None, channel=None, **kwargs):
+        user = info.context.user
+        if not user or user.is_anonymous:
+            user = None
+
+        if not user and not session_key:
+            return []
+
+        if user:
+            qs = models.RecentlyViewedProduct.objects.filter(user=user)
+        else:
+            qs = models.RecentlyViewedProduct.objects.filter(session_key=session_key)
+
+        viewed_products = [view.product for view in qs.select_related("product")[:5]]
+
+        if channel is None:
+            requestor = get_user_or_app_from_context(info.context)
+            has_required_permissions = has_one_of_permissions(
+                requestor, ALL_PRODUCTS_PERMISSIONS
+            )
+            if not has_required_permissions:
+                try:
+                    channel = get_default_channel_slug_or_graphql_error(
+                        allow_replica=info.context.allow_replica
+                    )
+                except Exception:
+                    channel = None
+
+        return [
+            ChannelContext(node=product, channel_slug=channel)
+            for product in viewed_products
+        ]
+
+    @staticmethod
     def resolve_product_type(_root, info: ResolveInfo, *, id):
         _, id = from_global_id_or_error(id, ProductType)
         return resolve_product_type_by_id(info, id)
@@ -664,6 +706,7 @@ class ProductMutations(graphene.ObjectType):
     product_bulk_create = ProductBulkCreate.Field()
     product_bulk_delete = ProductBulkDelete.Field()
     product_update = ProductUpdate.Field()
+    record_product_view = RecordProductView.Field()
     product_bulk_translate = ProductBulkTranslate.Field()
     product_translate = ProductTranslate.Field()
 
