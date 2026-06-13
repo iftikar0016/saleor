@@ -11,7 +11,7 @@ from ..channel.dataloaders.by_self import ChannelBySlugLoader
 from ..channel.utils import get_default_channel_slug_or_graphql_error
 from ..core import ResolveInfo
 from ..core.connection import create_connection_slice, filter_connection_queryset
-from ..core.context import ChannelContext, ChannelQsContext
+from ..core.context import ChannelContext, ChannelQsContext, get_database_connection_name
 from ..core.descriptions import (
     ADDED_IN_321,
     ADDED_IN_322,
@@ -531,10 +531,11 @@ class ProductQueries(graphene.ObjectType):
         if not user and not session_key:
             return []
 
+        db_name = get_database_connection_name(info.context)
         if user:
-            qs = models.RecentlyViewedProduct.objects.filter(user=user)
+            qs = models.RecentlyViewedProduct.objects.using(db_name).filter(user=user)
         else:
-            qs = models.RecentlyViewedProduct.objects.filter(session_key=session_key)
+            qs = models.RecentlyViewedProduct.objects.using(db_name).filter(session_key=session_key)
 
         viewed_products = [view.product for view in qs.select_related("product")[:5]]
 
