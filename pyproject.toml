@@ -83,6 +83,7 @@ dependencies = [
     "idna>=3.15",
     "orjson>=3.11.9",
     "django-environ>=0.13.0",
+    "setuptools>=70,<82",
 ]
 
 [project.urls]

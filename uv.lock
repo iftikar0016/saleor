@@ -2631,6 +2631,7 @@ dependencies = [
     { name = "semantic-version", marker = "platform_python_implementation != 'PyPy'" },
     { name = "sendgrid", marker = "platform_python_implementation != 'PyPy'" },
     { name = "sentry-sdk", marker = "platform_python_implementation != 'PyPy'" },
+    { name = "setuptools", marker = "platform_python_implementation != 'PyPy'" },
     { name = "stripe", marker = "platform_python_implementation != 'PyPy'" },
     { name = "text-unidecode", marker = "platform_python_implementation != 'PyPy'" },
     { name = "urllib3", marker = "platform_python_implementation != 'PyPy'" },
@@ -2743,6 +2744,7 @@ requires-dist = [
     { name = "semantic-version", specifier = ">=2.10.0,<3" },
     { name = "sendgrid", specifier = ">=6.7.1,<7" },
     { name = "sentry-sdk", specifier = "~=2.58" },
+    { name = "setuptools", specifier = ">=70,<82" },
     { name = "stripe", specifier = ">=3.0.0,<4" },
     { name = "text-unidecode", specifier = "~=1.2" },
     { name = "urllib3", specifier = ">=2.7.0,<3" },
@@ -2819,6 +2821,15 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/f6/5d/a343201726150e05f2036eeb6e493e2e2f8bf8a66f5aa70f2f4ac96f9ca3/sentry_sdk-2.62.0.tar.gz", hash = "sha256:3c870b9f50d9fd15b58c817dbde1c7cfaa9fe3f05df0a4c6edd5571cb82f5491", size = 463986 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/3d/07/05440381627877aae223fd68f330df9b9fc6641d08bf65328b55235617a2/sentry_sdk-2.62.0-py3-none-any.whl", hash = "sha256:27f61d13a86c3c1648dec666dd5a64f79772dd6a84b446f11866601ecab24f6f", size = 490586 },
+]
+
+[[package]]
+name = "setuptools"
+version = "81.0.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/0d/1c/73e719955c59b8e424d015ab450f51c0af856ae46ea2da83eba51cc88de1/setuptools-81.0.0.tar.gz", hash = "sha256:487b53915f52501f0a79ccfd0c02c165ffe06631443a886740b91af4b7a5845a", size = 1198299 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/e1/e3/c164c88b2e5ce7b24d667b9bd83589cf4f3520d97cad01534cd3c4f55fdb/setuptools-81.0.0-py3-none-any.whl", hash = "sha256:fdd925d5c5d9f62e4b74b30d6dd7828ce236fd6ed998a08d81de62ce5a6310d6", size = 1062021 },
 ]
 
 [[package]]
