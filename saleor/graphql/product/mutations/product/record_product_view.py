@@ -51,4 +51,9 @@ class RecordProductView(BaseMutation):
             session_key=session_key
         )
 
-        return RecordProductView(product=product, errors=[])
+        from ....core.context import ChannelContext
+
+        return RecordProductView(
+            product=ChannelContext(node=product, channel_slug=None),
+            errors=[]
+        )
