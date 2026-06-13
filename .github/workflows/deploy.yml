@@ -1,0 +1,76 @@
+name: Build and Deploy to Azure Container Apps
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  test:
+    name: Run Backend Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install uv
+          cd saleor && uv pip install -r pyproject.toml --system
+
+      - name: Run Pytest
+        run: |
+          cd saleor
+          # Run tests (excluding db integration tests if DB is not live in the GHA runner env)
+          pytest --ignore=saleor/graphql/product/tests/test_recently_viewed.py
+
+  build-and-deploy:
+    name: Build & Deploy to Azure Container Apps
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Log in to Azure
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Log in to Azure Container Registry
+        uses: azure/docker-login@v2
+        with:
+          login-server: ${{ secrets.AZURE_ACR_NAME }}.azurecr.io
+          username: ${{ secrets.AZURE_ACR_USERNAME }}
+          password: ${{ secrets.AZURE_ACR_PASSWORD }}
+
+      - name: Build and Push Docker Image
+        run: |
+          docker build -t ${{ secrets.AZURE_ACR_NAME }}.azurecr.io/saleor-core:${{ github.sha }} -f saleor/Dockerfile saleor
+          docker push ${{ secrets.AZURE_ACR_NAME }}.azurecr.io/saleor-core:${{ github.sha }}
+
+      - name: Deploy to Azure Container Apps
+        uses: azure/container-apps-deploy-action@v2
+        with:
+          acrName: ${{ secrets.AZURE_ACR_NAME }}
+          containerAppName: ${{ secrets.AZURE_ACA_APP_NAME }}
+          resourceGroup: ${{ secrets.AZURE_RESOURCE_GROUP }}
+          imageToDeploy: ${{ secrets.AZURE_ACR_NAME }}.azurecr.io/saleor-core:${{ github.sha }}
+          environmentVariables: |
+            DATABASE_URL=${{ secrets.AZURE_DATABASE_URL }}
+            REDIS_URL=${{ secrets.AZURE_REDIS_URL }}
+            SECRET_KEY=${{ secrets.AZURE_SECRET_KEY }}
+            ALLOWED_HOSTS=*
+            AZURE_STORAGE_CONNECTION_STRING=${{ secrets.AZURE_STORAGE_CONNECTION_STRING }}
