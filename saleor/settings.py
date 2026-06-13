@@ -51,6 +51,12 @@ from .patch_local import patch_local
 
 django_stubs_ext.monkeypatch()
 
+import environ
+
+PROJECT_ROOT = os.path.normpath(os.path.join(os.path.dirname(__file__), ".."))
+
+env = environ.Env()
+environ.Env.read_env(os.path.join(PROJECT_ROOT, ".env"))
 
 def get_list(text):
     return [item.strip() for item in text.split(",") if item]
@@ -61,33 +67,35 @@ def get_bool_from_env(name, default_value):
 
     Accepted values are `true` (case-insensitive) and `1`, any other value resolves to `False`.
     """
-    value = os.environ.get(name)
-    if value is None:
+    try:
+        value = env(name)
+    except Exception:
         return default_value
-    return value.lower() in ("true", "1")
+    if isinstance(value, bool):
+        return value
+    return str(value).lower() in ("true", "1")
 
 
 def get_url_from_env(name, *, schemes=None) -> str | None:
-    if name in os.environ:
-        value = os.environ[name]
-        message = f"{value} is an invalid value for {name}"
-        URLValidator(schemes=schemes, message=message)(value)
-        return value
-    return None
+    try:
+        value = env(name)
+    except Exception:
+        return None
+    message = f"{value} is an invalid value for {name}"
+    URLValidator(schemes=schemes, message=message)(value)
+    return value
 
 
 # Possibility to set memory limits for the process. Function `validate_and_set_rlimit` set the
 # maximum size of the process's heap(`resource.RLIMIT_DATA`). If you set the memory limit and process will try to
 # allocate more memory than the limit, it will raise `MemoryError`.
-SOFT_MEMORY_LIMIT_IN_MB = os.environ.get("SOFT_MEMORY_LIMIT_IN_MB", None)
-HARD_MEMORY_LIMIT_IN_MB = os.environ.get("HARD_MEMORY_LIMIT_IN_MB", None)
+SOFT_MEMORY_LIMIT_IN_MB = env("SOFT_MEMORY_LIMIT_IN_MB", default=None)
+HARD_MEMORY_LIMIT_IN_MB = env("HARD_MEMORY_LIMIT_IN_MB", default=None)
 validate_and_set_rlimit(SOFT_MEMORY_LIMIT_IN_MB, HARD_MEMORY_LIMIT_IN_MB)
 
-DEBUG = get_bool_from_env("DEBUG", True)
+DEBUG = env.bool("DEBUG", default=True)
 
 SITE_ID = 1
-
-PROJECT_ROOT = os.path.normpath(os.path.join(os.path.dirname(__file__), ".."))
 
 ROOT_URLCONF = "saleor.urls"
 
@@ -126,29 +134,26 @@ DATABASE_CONNECTION_DEFAULT_NAME = "default"
 # This variable should be set to `replica`
 DATABASE_CONNECTION_REPLICA_NAME = "replica"
 
-if "DATABASE_URL_REPLICA" in os.environ:
+if "DATABASE_URL_REPLICA" in env:
     DATABASE_URL_REPLICA_ENV_NAME = "DATABASE_URL_REPLICA"
 else:
     # If replica env is not set, then always try to use the
     # default env first.
-    DATABASE_URL_REPLICA_ENV_NAME = dj_database_url.DEFAULT_ENV
+    DATABASE_URL_REPLICA_ENV_NAME = "DATABASE_URL"
 
 DATABASES = {
-    DATABASE_CONNECTION_DEFAULT_NAME: dj_database_url.config(
-        env=dj_database_url.DEFAULT_ENV,
+    DATABASE_CONNECTION_DEFAULT_NAME: env.db(
+        "DATABASE_URL",
         default="postgres://saleor:saleor@localhost:5432/saleor",
-        conn_max_age=DB_CONN_MAX_AGE,
     ),
-    DATABASE_CONNECTION_REPLICA_NAME: dj_database_url.config(
-        env=DATABASE_URL_REPLICA_ENV_NAME,
+    DATABASE_CONNECTION_REPLICA_NAME: env.db(
+        DATABASE_URL_REPLICA_ENV_NAME,
         default="postgres://saleor:saleor@localhost:5432/saleor",
-        # TODO: We need to add read only user to saleor platform,
-        # and we need to update docs.
-        # default="postgres://saleor_read_only:saleor@localhost:5432/saleor",
-        conn_max_age=DB_CONN_MAX_AGE,
-        test_options={"MIRROR": DATABASE_CONNECTION_DEFAULT_NAME},
     ),
 }
+DATABASES[DATABASE_CONNECTION_DEFAULT_NAME]["CONN_MAX_AGE"] = DB_CONN_MAX_AGE
+DATABASES[DATABASE_CONNECTION_REPLICA_NAME]["CONN_MAX_AGE"] = DB_CONN_MAX_AGE
+DATABASES[DATABASE_CONNECTION_REPLICA_NAME]["TEST"] = {"MIRROR": DATABASE_CONNECTION_DEFAULT_NAME}
 
 DATABASE_ROUTERS = ["saleor.core.db_routers.PrimaryReplicaRouter"]
 
@@ -571,6 +576,8 @@ if AWS_STORAGE_BUCKET_NAME:
     STORAGES["staticfiles"] = {"BACKEND": "storages.backends.s3boto3.S3Boto3Storage"}
 elif GS_BUCKET_NAME:
     STORAGES["staticfiles"] = {"BACKEND": "storages.backends.gcloud.GoogleCloudStorage"}
+elif AZURE_CONTAINER:
+    STORAGES["staticfiles"] = {"BACKEND": "saleor.core.storages.AzureStorage"}
 
 if AWS_MEDIA_BUCKET_NAME:
     STORAGES["default"] = {"BACKEND": "saleor.core.storages.S3MediaStorage"}

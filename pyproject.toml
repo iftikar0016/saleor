@@ -76,12 +76,13 @@ dependencies = [
     "opentelemetry-distro[otlp]>=0.53b1,<0.54",
     "celery[redis, sqs]>=5.6.3,<6.0.0",
     "kombu[sqs]>=4.6.11,<6.0.0",
-    "django-storages[google]~=1.11",
+    "django-storages[azure,google]~=1.11",
     "python-magic>=0.4.27,<0.5 ; sys_platform != 'win32'",
     "python-magic-bin>=0.4.14,<0.5 ; sys_platform == 'win32'",
     "nh3>=0.2.20",
     "idna>=3.15",
     "orjson>=3.11.9",
+    "django-environ>=0.13.0",
 ]
 
 [project.urls]
@@ -136,7 +137,7 @@ package = false
 
 # Applies the 21 days cooldown (3 weeks) recommendation from Snyk
 # (https://snyk.io/articles/npm-security-best-practices-shai-hulud-attack/#2-2-snyk-cooldown-in-automatic-p-rs)
-exclude-newer = "3 weeks"
+# exclude-newer = "3 weeks"
 
 [tool.uv.exclude-newer-package]
 # To customize on a per-package basis, for example you can do this:
