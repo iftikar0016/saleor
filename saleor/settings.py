@@ -568,6 +568,22 @@ AZURE_CONTAINER = os.environ.get("AZURE_CONTAINER")
 AZURE_CONTAINER_PRIVATE = os.environ.get("AZURE_CONTAINER_PRIVATE")
 AZURE_SSL = os.environ.get("AZURE_SSL")
 
+AZURE_STORAGE_CONNECTION_STRING = os.environ.get("AZURE_STORAGE_CONNECTION_STRING")
+if AZURE_STORAGE_CONNECTION_STRING:
+    import re
+    if not AZURE_ACCOUNT_NAME:
+        name_match = re.search(r"AccountName=([^;]+)", AZURE_STORAGE_CONNECTION_STRING)
+        if name_match:
+            AZURE_ACCOUNT_NAME = name_match.group(1)
+    if not AZURE_ACCOUNT_KEY:
+        key_match = re.search(r"AccountKey=([^;]+)", AZURE_STORAGE_CONNECTION_STRING)
+        if key_match:
+            AZURE_ACCOUNT_KEY = key_match.group(1)
+    if not AZURE_CONTAINER:
+        AZURE_CONTAINER = "media"
+    if not AZURE_CONTAINER_PRIVATE:
+        AZURE_CONTAINER_PRIVATE = "media-private"
+
 # Replicate behavior of creating default values
 STORAGES = {
     "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
