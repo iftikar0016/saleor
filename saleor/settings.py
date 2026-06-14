@@ -560,11 +560,28 @@ if "GOOGLE_APPLICATION_CREDENTIALS" not in os.environ:
 
 # Azure Storage configuration
 # See https://django-storages.readthedocs.io/en/latest/backends/azure.html
+AZURE_STORAGE_CONNECTION_STRING = os.environ.get("AZURE_STORAGE_CONNECTION_STRING")
+AZURE_CONNECTION_STRING = AZURE_STORAGE_CONNECTION_STRING
 AZURE_ACCOUNT_NAME = os.environ.get("AZURE_ACCOUNT_NAME")
 AZURE_ACCOUNT_KEY = os.environ.get("AZURE_ACCOUNT_KEY")
 AZURE_CONTAINER = os.environ.get("AZURE_CONTAINER")
 AZURE_CONTAINER_PRIVATE = os.environ.get("AZURE_CONTAINER_PRIVATE")
 AZURE_SSL = os.environ.get("AZURE_SSL")
+
+if AZURE_STORAGE_CONNECTION_STRING:
+    import re
+    if not AZURE_ACCOUNT_NAME:
+        match_name = re.search(r"AccountName=([^;]+)", AZURE_STORAGE_CONNECTION_STRING)
+        if match_name:
+            AZURE_ACCOUNT_NAME = match_name.group(1)
+    if not AZURE_ACCOUNT_KEY:
+        match_key = re.search(r"AccountKey=([^;]+)", AZURE_STORAGE_CONNECTION_STRING)
+        if match_key:
+            AZURE_ACCOUNT_KEY = match_key.group(1)
+    if not AZURE_CONTAINER:
+        AZURE_CONTAINER = "media"
+    if not AZURE_CONTAINER_PRIVATE:
+        AZURE_CONTAINER_PRIVATE = "private"
 
 # Replicate behavior of creating default values
 STORAGES = {

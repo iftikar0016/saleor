@@ -108,4 +108,5 @@ jobs:
             REDIS_URL=${{ secrets.AZURE_REDIS_URL }}
             SECRET_KEY=${{ secrets.AZURE_SECRET_KEY }}
             ALLOWED_HOSTS=*
+            PUBLIC_URL=https://saleor-api.wittybay-989e7f74.uaenorth.azurecontainerapps.io
             AZURE_STORAGE_CONNECTION_STRING=${{ secrets.AZURE_STORAGE_CONNECTION_STRING }}
