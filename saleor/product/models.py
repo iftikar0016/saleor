@@ -1,7 +1,7 @@
 import datetime
 from collections.abc import Iterable
 from decimal import Decimal
-from typing import Optional
+from typing import Optional, TYPE_CHECKING
 
 import graphene
 from django.conf import settings
@@ -39,6 +39,9 @@ from ..permission.enums import (
 from ..seo.models import SeoModel, SeoModelTranslationWithSlug
 from ..tax.models import TaxClass
 from . import ProductMediaTypes, ProductTypeKind, managers
+
+if TYPE_CHECKING:
+    from ..account.models import User
 
 ALL_PRODUCTS_PERMISSIONS = [
     # List of permissions, where each of them allows viewing all products
@@ -728,7 +731,7 @@ class RecentlyViewedProductManager(models.Manager["RecentlyViewedProduct"]):
     def record_view(
         self,
         product: "Product",
-        user: models.Model | None = None,
+        user: "User | None" = None,
         session_key: str | None = None,
     ) -> Optional["RecentlyViewedProduct"]:
         if not user and not session_key:

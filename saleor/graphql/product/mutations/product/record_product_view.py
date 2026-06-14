@@ -24,7 +24,9 @@ class RecordProductView(BaseMutation):
         error_type_field = "product_errors"
 
     @classmethod
-    def perform_mutation(cls, _root, info: ResolveInfo, /, *, id, session_key=None):
+    def perform_mutation(  # type: ignore[override]
+        cls, _root, info: ResolveInfo, /, *, id, session_key=None
+    ):
         # Resolve the product instance from the global ID
         product = cls.get_node_or_error(
             info, id, field="id", only_type=Product

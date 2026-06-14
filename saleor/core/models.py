@@ -86,7 +86,7 @@ class ModelWithMetadata(models.Model):
     )
 
     class Meta:
-        indexes: list[PostgresIndex] = [
+        indexes: list[models.Index] = [
             GinIndex(fields=["private_metadata"], name="%(class)s_p_meta_idx"),
             GinIndex(fields=["metadata"], name="%(class)s_meta_idx"),
         ]

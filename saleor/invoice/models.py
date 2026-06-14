@@ -15,7 +15,7 @@ from . import InvoiceEvents
 
 class InvoiceQueryset(models.QuerySet["Invoice"]):
     def ready(self):
-        return self.filter(job__status=JobStatus.SUCCESS)
+        return self.filter(status=JobStatus.SUCCESS)
 
 
 InvoiceManager = models.Manager.from_queryset(InvoiceQueryset)
