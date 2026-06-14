@@ -582,7 +582,7 @@ if AZURE_STORAGE_CONNECTION_STRING:
     if not AZURE_CONTAINER:
         AZURE_CONTAINER = "media"
     if not AZURE_CONTAINER_PRIVATE:
-        AZURE_CONTAINER_PRIVATE = "media-private"
+        AZURE_CONTAINER_PRIVATE = "private"
 
 # Replicate behavior of creating default values
 STORAGES = {
