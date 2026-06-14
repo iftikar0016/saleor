@@ -517,6 +517,8 @@ ALLOWED_GRAPHQL_ORIGINS: list[str] = get_list(
 )
 
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+USE_X_FORWARDED_HOST = True
+USE_X_FORWARDED_PORT = True
 
 # Amazon S3 configuration
 # See https://django-storages.readthedocs.io/en/latest/backends/amazon-S3.html
