@@ -985,7 +985,7 @@ CACHE_URL = (
     if REDIS_URL
     else os.environ.get("CACHE_URL")
 )
-CACHES = {"default": django_cache_url.config()}
+CACHES = {"default": django_cache_url.config(default="locmem://")}
 CACHES["default"]["TIMEOUT"] = parse(os.environ.get("CACHE_TIMEOUT", "7 days"))
 
 JWT_TTL_ACCESS = datetime.timedelta(
