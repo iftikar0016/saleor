@@ -724,8 +724,13 @@ class CollectionTranslation(SeoModelTranslationWithSlug):
         return translated_keys
 
 
-class RecentlyViewedProductManager(models.Manager):
-    def record_view(self, product, user=None, session_key=None):
+class RecentlyViewedProductManager(models.Manager["RecentlyViewedProduct"]):
+    def record_view(
+        self,
+        product: "Product",
+        user: models.Model | None = None,
+        session_key: str | None = None,
+    ) -> Optional["RecentlyViewedProduct"]:
         if not user and not session_key:
             return None
 

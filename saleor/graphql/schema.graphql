@@ -469,6 +469,15 @@ type Query {
     last: Int
   ): ProductCountableConnection @doc(category: "Products")
 
+  """List of recently viewed products for the current user or session."""
+  recentlyViewedProducts(
+    """Session key for anonymous users."""
+    sessionKey: String
+
+    """Slug of a channel for which the data should be returned."""
+    channel: String
+  ): [Product!]
+
   """Look up a product type by ID."""
   productType(
     """ID of the product type."""
@@ -18248,6 +18257,15 @@ type Mutation {
     input: ProductInput!
   ): ProductUpdate @doc(category: "Products")
 
+  """Record a product view for recently viewed products."""
+  recordProductView(
+    """ID of the viewed product."""
+    id: ID!
+
+    """Session key for anonymous users."""
+    sessionKey: String
+  ): RecordProductView
+
   """
   Creates/updates translations for products. 
   
@@ -24836,6 +24854,14 @@ input ProductInput @doc(category: "Products") {
 
   """External ID of this product."""
   externalReference: String
+}
+
+"""Record a product view for recently viewed products."""
+type RecordProductView {
+  """The viewed product."""
+  product: Product
+  productErrors: [ProductError!]! @deprecated(reason: "Use `errors` field instead.")
+  errors: [ProductError!]!
 }
 
 """
