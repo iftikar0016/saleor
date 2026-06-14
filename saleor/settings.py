@@ -985,6 +985,13 @@ CACHE_URL = (
     if REDIS_URL
     else os.environ.get("CACHE_URL")
 )
+
+# Overrides localhost/127.0.0.1 Redis settings when running in Azure Container Apps
+if os.environ.get("AZURE_STORAGE_CONNECTION_STRING"):
+    if not CACHE_URL or "localhost" in CACHE_URL or "127.0.0.1" in CACHE_URL:
+        CACHE_URL = "locmem://"
+        os.environ["CACHE_URL"] = "locmem://"
+
 CACHES = {"default": django_cache_url.config(default="locmem://")}
 CACHES["default"]["TIMEOUT"] = parse(os.environ.get("CACHE_TIMEOUT", "7 days"))
 
