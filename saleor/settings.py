@@ -205,6 +205,8 @@ ENABLE_SSL: bool = get_bool_from_env("ENABLE_SSL", False)
 # URL on which Saleor is hosted (e.g., https://api.example.com/). This has precedence
 # over ENABLE_SSL and Shop.domain when generating URLs pointing to itself.
 PUBLIC_URL: str | None = get_url_from_env("PUBLIC_URL", schemes=["http", "https"])
+if not PUBLIC_URL and os.environ.get("AZURE_STORAGE_CONNECTION_STRING"):
+    PUBLIC_URL = "https://saleor-api.wittybay-989e7f74.uaenorth.azurecontainerapps.io"
 if PUBLIC_URL:
     if os.environ.get("ENABLE_SSL") is not None:
         warnings.warn(
