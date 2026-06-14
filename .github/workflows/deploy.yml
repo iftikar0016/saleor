@@ -102,6 +102,7 @@ jobs:
           containerAppName: ${{ secrets.AZURE_ACA_APP_NAME }}
           resourceGroup: ${{ secrets.AZURE_RESOURCE_GROUP }}
           imageToDeploy: ${{ secrets.AZURE_ACR_NAME }}.azurecr.io/saleor-core:${{ github.sha }}
+          targetPort: 8000
           environmentVariables: |
             DATABASE_URL=${{ secrets.AZURE_DATABASE_URL }}
             REDIS_URL=${{ secrets.AZURE_REDIS_URL }}
