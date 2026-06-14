@@ -1792,7 +1792,11 @@ def create_site_settings():
     data = types["site.sitesettings"]
 
     # Filter out fields that do not exist on the SiteSettings model to prevent crashes
-    valid_fields = {f.name for f in SiteSettings._meta.get_fields()}
+    valid_fields = set()
+    for f in SiteSettings._meta.get_fields():
+        valid_fields.add(f.name)
+        if hasattr(f, "attname"):
+            valid_fields.add(f.attname)
 
     for settings_item in data:
         pk = settings_item["pk"]
