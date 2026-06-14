@@ -103,7 +103,7 @@ jobs:
           resourceGroup: ${{ secrets.AZURE_RESOURCE_GROUP }}
           imageToDeploy: ${{ secrets.AZURE_ACR_NAME }}.azurecr.io/saleor-core:${{ github.sha }}
           targetPort: 8000
-          environmentVariables: |
+          environmentVariables: >-
             DATABASE_URL=${{ secrets.AZURE_DATABASE_URL }}
             REDIS_URL=${{ secrets.AZURE_REDIS_URL }}
             SECRET_KEY=${{ secrets.AZURE_SECRET_KEY }}
