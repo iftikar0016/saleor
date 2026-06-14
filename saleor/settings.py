@@ -8,7 +8,6 @@ import warnings
 from typing import cast
 from urllib.parse import urlparse
 
-import dj_database_url
 import dj_email_url
 import django_cache_url
 import django_stubs_ext
@@ -57,6 +56,7 @@ PROJECT_ROOT = os.path.normpath(os.path.join(os.path.dirname(__file__), ".."))
 
 env = environ.Env()
 environ.Env.read_env(os.path.join(PROJECT_ROOT, ".env"))
+
 
 def get_list(text):
     return [item.strip() for item in text.split(",") if item]
@@ -153,7 +153,9 @@ DATABASES = {
 }
 DATABASES[DATABASE_CONNECTION_DEFAULT_NAME]["CONN_MAX_AGE"] = DB_CONN_MAX_AGE
 DATABASES[DATABASE_CONNECTION_REPLICA_NAME]["CONN_MAX_AGE"] = DB_CONN_MAX_AGE
-DATABASES[DATABASE_CONNECTION_REPLICA_NAME]["TEST"] = {"MIRROR": DATABASE_CONNECTION_DEFAULT_NAME}
+DATABASES[DATABASE_CONNECTION_REPLICA_NAME]["TEST"] = {
+    "MIRROR": DATABASE_CONNECTION_DEFAULT_NAME
+}
 
 DATABASE_ROUTERS = ["saleor.core.db_routers.PrimaryReplicaRouter"]
 
@@ -570,6 +572,7 @@ AZURE_SSL = os.environ.get("AZURE_SSL")
 
 if AZURE_STORAGE_CONNECTION_STRING:
     import re
+
     if not AZURE_ACCOUNT_NAME:
         match_name = re.search(r"AccountName=([^;]+)", AZURE_STORAGE_CONNECTION_STRING)
         if match_name:
