@@ -1791,11 +1791,15 @@ def create_site_settings():
     types = get_sample_data()
     data = types["site.sitesettings"]
 
+    # Filter out fields that do not exist on the SiteSettings model to prevent crashes
+    valid_fields = {f.name for f in SiteSettings._meta.get_fields()}
+
     for settings_item in data:
         pk = settings_item["pk"]
         defaults = dict(settings_item["fields"])
+        filtered_defaults = {k: v for k, v in defaults.items() if k in valid_fields}
 
-        SiteSettings.objects.update_or_create(pk=pk, defaults=defaults)
+        SiteSettings.objects.update_or_create(pk=pk, defaults=filtered_defaults)
         yield "Site settings updated"
 
 
