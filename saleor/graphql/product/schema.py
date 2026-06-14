@@ -11,7 +11,11 @@ from ..channel.dataloaders.by_self import ChannelBySlugLoader
 from ..channel.utils import get_default_channel_slug_or_graphql_error
 from ..core import ResolveInfo
 from ..core.connection import create_connection_slice, filter_connection_queryset
-from ..core.context import ChannelContext, ChannelQsContext, get_database_connection_name
+from ..core.context import (
+    ChannelContext,
+    ChannelQsContext,
+    get_database_connection_name,
+)
 from ..core.descriptions import (
     ADDED_IN_321,
     ADDED_IN_322,
@@ -29,7 +33,6 @@ from ..core.tracing import traced_resolver
 from ..core.types import NonNullList
 from ..core.utils import from_global_id_or_error, validate_and_apply_search_rank_sorting
 from ..core.validators import validate_one_of_args_is_in_query
-from ..shop.resolvers import get_database_connection_name
 from ..translations.mutations import (
     CategoryTranslate,
     CollectionTranslate,
@@ -75,17 +78,17 @@ from .mutations import (
     ProductMediaDelete,
     ProductMediaReorder,
     ProductMediaUpdate,
-    ProductUpdate,
-    RecordProductView,
     ProductTypeCreate,
     ProductTypeDelete,
     ProductTypeUpdate,
+    ProductUpdate,
     ProductVariantCreate,
     ProductVariantDelete,
     ProductVariantPreorderDeactivate,
     ProductVariantReorder,
     ProductVariantSetDefault,
     ProductVariantUpdate,
+    RecordProductView,
     VariantMediaAssign,
     VariantMediaUnassign,
 )
@@ -253,7 +256,9 @@ class ProductQueries(graphene.ObjectType):
     recently_viewed_products = NonNullList(
         Product,
         session_key=graphene.String(description="Session key for anonymous users."),
-        channel=graphene.String(description="Slug of a channel for which the data should be returned."),
+        channel=graphene.String(
+            description="Slug of a channel for which the data should be returned."
+        ),
         description="List of recently viewed products for the current user or session.",
     )
     product_type = BaseField(
@@ -523,7 +528,9 @@ class ProductQueries(graphene.ObjectType):
 
     @staticmethod
     @traced_resolver
-    def resolve_recently_viewed_products(_root, info: ResolveInfo, *, session_key=None, channel=None, **kwargs):
+    def resolve_recently_viewed_products(
+        _root, info: ResolveInfo, *, session_key=None, channel=None, **kwargs
+    ):
         user = info.context.user
         if not user or user.is_anonymous:
             user = None
@@ -535,7 +542,9 @@ class ProductQueries(graphene.ObjectType):
         if user:
             qs = models.RecentlyViewedProduct.objects.using(db_name).filter(user=user)
         else:
-            qs = models.RecentlyViewedProduct.objects.using(db_name).filter(session_key=session_key)
+            qs = models.RecentlyViewedProduct.objects.using(db_name).filter(
+                session_key=session_key
+            )
 
         viewed_products = [view.product for view in qs.select_related("product")[:5]]
 

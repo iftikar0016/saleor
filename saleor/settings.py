@@ -11,6 +11,7 @@ from urllib.parse import urlparse
 import dj_email_url
 import django_cache_url
 import django_stubs_ext
+import environ
 import sentry_sdk
 import sentry_sdk.utils
 from celery.schedules import crontab
@@ -49,8 +50,6 @@ from .graphql.promise import patch_promise
 from .patch_local import patch_local
 
 django_stubs_ext.monkeypatch()
-
-import environ
 
 PROJECT_ROOT = os.path.normpath(os.path.join(os.path.dirname(__file__), ".."))
 
