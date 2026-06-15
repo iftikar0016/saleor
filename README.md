@@ -7,7 +7,7 @@ This repository contains the complete implementation of the **AMTS Technical Ass
 ## 🔗 Live Deployments
 
 * **Backend GraphQL API (Azure)**: [https://saleor-api.wittybay-989e7f74.uaenorth.azurecontainerapps.io/graphql/](https://saleor-api.wittybay-989e7f74.uaenorth.azurecontainerapps.io/graphql/)
-* **Next.js Storefront (Vercel)**: [https://storefront-om9i8w6bm-iftikar-alams-projects.vercel.app/](https://storefront-om9i8w6bm-iftikar-alams-projects.vercel.app/)
+* **Next.js Storefront (Vercel)**: [https://storefront-chi-flax.vercel.app/default-channel](https://storefront-chi-flax.vercel.app/default-channel)
 * **Admin Superuser Credentials**:
   * **Email**: `admin@example.com`
   * **Password**: `admin`
