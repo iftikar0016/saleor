@@ -1,196 +1,148 @@
-<div align="center" width="100px">
+# AMTS Technical Assignment: Saleor E-Commerce Stack (Azure Edition)
 
- <picture>
-   <source media="(prefers-color-scheme: dark)" srcset="https://github.com/user-attachments/assets/76e3079f-696a-4fcd-8658-89739647090b">
-   <source media="(prefers-color-scheme: light)" srcset="https://github.com/user-attachments/assets/8477d643-a905-4c63-8ed3-03d0976f6fc3">
-   <img width="200" alt="saleor-commerce-logo" src="https://user-images.githubusercontent.com/4006792/214636328-8e4f83e8-66cb-4114-a3d8-473eb908b9c3.png">
+This repository contains the complete implementation of the **AMTS Technical Assignment**. It integrates the **Saleor Core (Django)** backend and the **Saleor Storefront (Next.js)** into a unified local stack running via Docker Compose, fully configured and deployed on **Microsoft Azure** and **Vercel**.
 
- </picture>
-</div>
+---
 
-<div align="center">
-  <strong>Commerce that works with your language and stack</strong>
-</div>
+## 🔗 Live Deployments
 
-<div align="center">
-  GraphQL native, API-only platform for scalable composable commerce.
-</div>
+* **Backend GraphQL API (Azure)**: [https://saleor-api.wittybay-989e7f74.uaenorth.azurecontainerapps.io/graphql/](https://saleor-api.wittybay-989e7f74.uaenorth.azurecontainerapps.io/graphql/)
+* **Next.js Storefront (Vercel)**: [https://storefront-om9i8w6bm-iftikar-alams-projects.vercel.app/](https://storefront-om9i8w6bm-iftikar-alams-projects.vercel.app/)
+* **Admin Superuser Credentials**:
+  * **Email**: `admin@example.com`
+  * **Password**: `admin`
 
-<br>
+---
 
-<div align="center">
- Get to know Saleor: <br>
-  <a href="https://saleor.io/cloud/talk-to-us?utm_source=github&utm_medium=readme&utm_campaign=repo_saleor">Talk to a human</a>
-  <span> | </span>
-  <a href="https://cloud.saleor.io/signup?utm_source=github&utm_medium=readme&utm_campaign=repo_saleor">Talk to the API</a>
-</div>
+## 🏛️ Project Architecture
 
-<br>
+```mermaid
+graph TD
+    Client[Next.js Storefront on Vercel] -->|GraphQL HTTPS / Auth| Core[Saleor Core API on Azure Container Apps]
+    Client -->|Session Headers / JWT| Core
+    Core -->|Database Queries| Postgres[(Azure Database for PostgreSQL)]
+    Core -->|Static & Product Images| Blob[(Azure Blob Storage / Media Container)]
+    Core -->|Cache fallback| Memory[(In-Memory Cache / locmem)]
+    Dashboard[Saleor Dashboard] -->|GraphQL Admin Panel| Core
+```
 
-<div align="center">
-  Join our community: <br>
-  <a href="https://saleor.io/">Website</a>
-  <span> | </span>
-  <a href="https://twitter.com/getsaleor">Twitter</a>
-  <span> | </span>
-  <a href="https://saleor.io/discord">Discord</a>
-</div>
+---
 
-<div align="center">
-   <a href="https://saleor.io/blog">Blog</a>
-  <span> | </span>
-  <a href="https://saleor.typeform.com/to/JTJK0Nou">Subscribe to newsletter</a>
-</div>
+## 🌐 Architectural Decisions & Selection of Azure Services
 
-<br>
+1. **Backend Hosting: Azure Container Apps (ACA)**
+   * **Selection**: Deployed the Saleor Core container to Azure Container Apps.
+   * **Rationale**: ACA is a modern, serverless container platform built on Kubernetes (K8s) and KEDA. It abstracts infrastructure management, enforces HTTPS by default, supports scaling to zero (saving costs for inactive deployments), and handles revisions out of the box. This provides a production-ready setup without the operational complexity of managing a virtual machine or a full AKS cluster.
+2. **Database: Azure Database for PostgreSQL (Flexible Server)**
+   * **Selection**: Configured a Flexible Server PostgreSQL instance (v15).
+   * **Rationale**: Fully managed, production-grade Postgres service. The "Flexible Server" deployment option offers custom maintenance windows, zone-redundancy, and automatic backups.
+3. **Storage: Azure Blob Storage**
+   * **Selection**: Configured hot tier Azure Blob Storage.
+   * **Rationale**: Headless commerce requires highly durable, low-latency, and cost-efficient asset distribution. Static and media assets are routed to public containers (`media` and `private` containers) using the Django Storage backend configured dynamically via the environment.
+4. **CI/CD: GitHub Actions**
+   * **Selection**: Standardized on GitHub Actions for pipeline automation.
+   * **Rationale**: Seamlessly integrates with the workspace, automatically runs our GraphQL unit tests, builds the Docker image, pushes it to Azure Container Registry (ACR), and triggers ACA to deploy the new container revision upon pushing to the `main` branch.
+5. **Storefront Hosting: Vercel**
+   * **Selection**: Deployed the Next.js Storefront to Vercel.
+   * **Rationale**: Next.js is optimized for Vercel, providing instant serverless routing, Edge optimization, and optimal build caching out of the box.
 
-<div align="center">
-  <a href="https://codecov.io/gh/saleor/saleor" >
-    <img src="https://codecov.io/gh/saleor/saleor/graph/badge.svg?token=qkNcTJ4TmI" alt="Coverage"/>
-  </a>
-  <a href="https://docs.saleor.io/">
-    <img src="https://img.shields.io/badge/docs-docs.saleor.io-brightgreen.svg" alt="Documentation" />
-  </a>
-  <a href="https://github.com/astral-sh/ruff">
-    <img src="https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json" alt="Linted by Ruff">
-  </a>
- <a href="https://saleor.io/discord">
-   <img src="https://img.shields.io/discord/864066819866624010"  alt="Discord" >
- </a>
-</div>
+---
 
-## Table of Contents
+## 📝 Changelog & Modification Rationale
 
-- [What makes Saleor special?](#what-makes-saleor-special)
-- [Why API-only Architecture?](#why-api-only-architecture)
-- [Features](#features)
-- [Installation](#installation)
-- [Documentation](#documentation)
-- [Saleor Platform](#saleor-platform)
-- [Storefront](#storefront)
-- [Dashboard](#dashboard)
-- [Contributing](#contributing)
-- [License](#license)
+### 1. Backend Core (`saleor` - Django)
+* **Configuration Switch (`django-environ`)**: Refactored [settings.py](file:///c:/Users/iftik/OneDrive/Desktop/AMTS/AMTS/saleor/saleor/settings.py) to parse environments through `django-environ`. This enables seamless secret injection (`DATABASE_URL`, `AZURE_STORAGE_CONNECTION_STRING`, etc.) and isolates configuration variables from the source code.
+* **Windows Host Support**: Refactored `saleor/core/rlimit.py` to handle `ModuleNotFoundError` on Windows systems (where the Unix-specific `resource` module is missing). This allows native development and tests to run locally on Windows machines.
+* **Docker Mount Optimization**: Optimized the `Dockerfile` and `docker-compose.yml` to use standard Docker volume synchronization instead of read-only bind mounts, resolving package synchronization collisions in some Docker Desktop runtimes.
 
-## What makes Saleor special?
+### 2. Azure-Specific Bug Fixes
+* **Database Seeding Fix (`random_data.py`)**:
+  * *Problem*: The seeding command (`populatedb`) failed on Azure with an `IntegrityError: null value in column "site_id"`. This was due to the seeding script only checking Django field `.name` properties during fixture JSON importing, which filtered out foreign keys like `site_id`, `top_menu_id`, and `bottom_menu_id`.
+  * *Fix*: Modified [random_data.py](file:///c:/Users/iftik/OneDrive/Desktop/AMTS/AMTS/saleor/saleor/core/utils/random_data.py#L1792-L1804) to include `f.attname` in the valid fields check, allowing Django relationship database columns to seed properly.
+* **Throttling/Redis Cache Fallback (`settings.py`)**:
+  * *Problem*: User logins crashed with `redis.exceptions.ConnectionError: Error 111 connecting to localhost:6379`. The authentication endpoint uses throttling, which queries Django's default cache. Since Redis is not deployed on Azure, it crashed.
+  * *Fix*: Implemented dynamic cache routing in [settings.py](file:///c:/Users/iftik/OneDrive/Desktop/AMTS/AMTS/saleor/saleor/settings.py#L988-L995). If the app runs on Azure (presence of `AZURE_STORAGE_CONNECTION_STRING`) and the cache targets a local address, it overrides the engine to fall back to Django's in-memory local cache (`locmem://`).
 
-- **Technology-agnostic** - no monolithic plugin architecture or technology lock-in.
+### 3. "Recently Viewed Products" Feature (End-to-End)
+* **Database Model**: Created a `RecentlyViewedProduct` model in [product/models.py](file:///c:/Users/iftik/OneDrive/Desktop/AMTS/AMTS/saleor/saleor/product/models.py) linking a product with a `user` (for authenticated flows) or `session_key` (for anonymous flows), alongside a `viewed_at` timestamp.
+* **FIFO rolling Capping Manager**: Implemented `RecentlyViewedProductManager` to automatically prune the database history when a new view is registered, ensuring exactly the **last 5 viewed products** are maintained per user/session.
+* **GraphQL API endpoints**:
+  * `recordProductView` Mutation: Safely registers a product view server-side, linking it either to the authenticated user token or an anonymous session cookie.
+  * `recentlyViewedProducts` Query: Retrieves the last 5 viewed products with full product details (name, price, images).
+* **Next.js Storefront Components**:
+  * Created `RecentlyViewedTracker` which issues the mutation asynchronously on PDP (Product Detail Page) loads.
+  * Created the `RecentlyViewed` premium slider component styled in CSS, rendering recently viewed products fetched server-side from the GraphQL query.
 
-- **GraphQL only** - Not afterthought API design or fragmentation across different styles of API.
+---
 
-- **Headless and API only** - APIs are the only way to interact, configure, or extend the backend.
+## 🚀 Local Development Setup
 
-- **Open source** -  a single version of Saleor without feature fragmentation or commercial limitations.
+Follow these steps to run the entire e-commerce stack locally:
 
-- **Cloud native** - battle tested on global brands.
+### Prerequisites
+* Docker & Docker Compose
+* Node.js v18+ & pnpm (`npm install -g pnpm`)
+* Python 3.12+ (optional, for local non-docker development)
 
-- **Native-multichannel** - Per [channel](https://docs.saleor.io/developer/channels/overview) control of pricing, currencies, stock, product, and more.
+### Step 1: Clone and Spin Up the Infrastructure
+1. Clone the repository and navigate to the project directory.
+2. Spin up the backend containers (PostgreSQL, Redis, Saleor API, and Saleor Dashboard):
+   ```bash
+   docker compose up -d
+   ```
 
-## Why API-only Architecture?
+### Step 2: Initialize the Database
+1. Run Django migrations to create the database schema:
+   ```bash
+   docker compose run --rm api python manage.py migrate
+   ```
+2. Seed the database with sample products and create the default admin account:
+   ```bash
+   docker compose run --rm api python manage.py populatedb --createsuperuser
+   ```
+   * *Admin User*: `admin@example.com` / `admin`
 
-Saleor's API-first extensibility provides powerful tools for developers to extend backend using [webhooks](https://docs.saleor.io/developer/extending/webhooks/overview), attributes, [metadata](https://docs.saleor.io/api-usage/metadata), [apps](https://docs.saleor.io/developer/extending/apps/overview), [subscription queries](https://docs.saleor.io/developer/extending/webhooks/subscription-webhook-payloads), [API extensions](https://docs.saleor.io/developer/extending/webhooks/synchronous-events/overview), [dashboard iframes](https://docs.saleor.io/developer/extending/apps/overview).
+### Step 3: Run the Next.js Storefront
+1. Navigate to the storefront directory:
+   ```bash
+   cd storefront
+   ```
+2. Install the packages:
+   ```bash
+   pnpm install
+   ```
+3. Generate the GraphQL TypeScript types (which introspects the running Saleor API):
+   ```bash
+   pnpm run generate:all
+   ```
+4. Start the storefront development server:
+   ```bash
+   pnpm run dev
+   ```
 
-Compared to traditional plugin architectures (monoliths) it provides the following benefits:
+* Storefront: `http://localhost:3000`
+* Saleor GraphQL API: `http://localhost:8000/graphql/`
+* Saleor Dashboard (Admin panel): `http://localhost:9000`
 
-- There is less downtime as apps are deployed independently.
-- Reliability and performance - custom logic is separated from the core.
-- Simplified upgrade paths - eliminates incompatibility conflicts between extensions.
-- Technology-agnostic - works with any technology, stack, or language.
-- Parallel development - easier to collaborate than with a monolithic core.
-- Simplified debugging - easier to narrow down bugs in independent services.
-- Scalability - extensions and apps can be scaled independently.
+---
 
-### What are the tradeoffs?
+## 🧪 Running Automated Tests
 
-If you are a single developer working with a small business that doesn't have high traffic or a critical need for 24/7 availability, using a service-oriented approach might feel more complex compared to the traditional WordPress or Magento approach that provides a language-specific framework, runtime, database schema, aspect-oriented programming, and other tools to a quick start.
+We wrote full integration tests for the "Recently Viewed" database manager and GraphQL endpoints. To execute them inside the local container:
+```bash
+docker compose run --rm api pytest saleor/graphql/product/tests/test_recently_viewed.py
+```
 
-However, if you deploy on a daily basis, reliability and uptime is critical,
-you need to collaborate with other developers, or you have non-trivial requirements you might be in the right place.
+---
 
-## Features
+## ⚠️ Trade-offs & Limitations
 
-- **Enterprise ready**: Secure, scalable, and stable. Battle-tested by big brands
-- **Dashboard**: User-friendly, fast, and productive. (Decoupled project [repo](https://github.com/saleor/saleor-dashboard) )
-- **Global by design** Multi-currency, multi-language, multi-warehouse, tutti multi!
-- **CMS**: Manage product or marketing content.
-- **Product management**: A rich content model for large and complex catalogs.
-- **Orders**: Flexible order model, split payments, multi-warehouse, returns, and more.
-- **Customers**: Order history and preferences.
-- **Promotion engine**: Sales, vouchers, cart rules, giftcards.
-- **Payment orchestration**: multi-gateway, extensible payment API, flexible flows.
-- **Cart**: Advanced payment and tax options, with full control over discounts and promotions.
-- **Payments**: Flexible API architecture allows integration of any payment method.
-- **Translations**: Fully translatable catalog.
-- **SEO**: Unlimited SEO freedom with headless architecture.
-- **Apps**: Extend dashboard via iframe with any web stack.
-
-![Saleor Dashboard - Modern UI for managing your e-commerce](https://user-images.githubusercontent.com/9268745/224249510-d3c7658e-6d5c-42c5-b4fb-93eaf65a5335.png)
-
-## Installation
-
-[See the Saleor docs](https://docs.saleor.io/setup/docker-compose) for step-by-step installation and deployment instructions. For local development without Docker, follow our [Contributing Guide](./CONTRIBUTING.md).
-
-Note:
-The `main` branch is the development version of Saleor and it may be unstable. To use the latest stable version, download it from the [Releases](https://github.com/saleor/saleor/releases/) page or switch to a release tag.
-
-The current production-ready version is 3.x and you should use this version for all three components:
-
-- Saleor: <https://github.com/saleor/saleor/releases/>
-- Dashboard: <https://github.com/saleor/saleor-dashboard/releases/>
-- Storefront: <https://github.com/saleor/react-storefront/releases/>
-
-### Saleor Cloud
-
-The fastest way to develop with Saleor is by using developer accounts in [Saleor Cloud](https://cloud.saleor.io).
-
-Register [here](https://cloud.saleor.io/register) or install our [CLI tool](https://github.com/saleor/saleor-cli):
-
-`npm i -g @saleor/cli`
-
-and run the following command:
-
-`saleor register`
-
-Bootstrap your first [storefront](https://github.com/saleor/react-storefront) with:
-
-`saleor storefront create --url {your-saleor-graphql-endpoint}`
-
-## Documentation
-
-Saleor documentation is available here: [docs.saleor.io](https://docs.saleor.io)
-
-To contribute, please see the [`saleor/saleor-docs` repository](https://github.com/saleor/saleor-docs/).
-
-## Saleor Platform
-
-The easiest way to run all components of Saleor (API, storefront, and dashboard) together on your local machine is to use the [saleor-platform](https://github.com/saleor/saleor-platform) project. Go to that repository for instructions on how to use it.
-
-[View saleor-platform](https://github.com/saleor/saleor-platform)
-
-## Storefront
-
-An open-source storefront example built with Next.js App Router, React.js, TypeScript, GraphQL, and Tailwind CSS.
-
-[React Storefront Repository](https://github.com/saleor/storefront)
-
-[View Storefront Example](https://storefront.saleor.io/)
-
-## Dashboard
-
-For the dashboard, go to the [saleor-dashboard](https://github.com/saleor/saleor-dashboard) repository.
-
-## Contributing
-
-We love your contributions and do our best to provide you with mentorship and support. If you are looking for an issue to tackle, take a look at issues labeled [`Good first issue`](https://github.com/saleor/saleor/issues?q=is%3Aopen+is%3Aissue+label%3A%22good+first+issue%22+) and [`Help wanted`](https://github.com/saleor/saleor/issues?q=is%3Aopen+is%3Aissue+label%3A%22help+wanted%22).
-
-If nothing grabs your attention, check [our roadmap](https://saleor.io/roadmap) or [start a Discord discussion](https://saleor.io/discord) about a feature you'd like to see. Make sure to read our [Contribution Guidelines](http://docs.saleor.io/developer/community/contributing) before opening a PR or issue.
-
-Get more details (e.g., how to run Saleor on your local machine) in our [Contributing Guide](./CONTRIBUTING.md).
-
-## License
-
-Disclaimer: Everything you see here is open and free to use as long as you comply with the [license](https://github.com/saleor/saleor/blob/main/LICENSE). There are no hidden charges. We promise to do our best to fix bugs and improve the code.
-
-#### Crafted with ❤️ by [Saleor Commerce](https://saleor.io)
-
-<hello@saleor.io>
+1. **Local Memory Cache Fallback on Azure**
+   * *Trade-off*: We fell back to Django's `locmem://` cache backend instead of spinning up Azure Cache for Redis. 
+   * *Limitation*: Because `locmem` keeps cache in the container's memory, if the Container App scales horizontally to multiple replicas, the throttling cache is not shared. For production high-traffic scaling, an Azure Cache for Redis instance should be provisioned and configured.
+2. **Anonymous Session Key Generation**
+   * *Trade-off*: Anonymous session keys are generated by the storefront and passed via request headers.
+   * *Limitation*: If the user clears their browser cookies/storage, their anonymous session history is lost.
+3. **Synchronous Product View Writes**
+   * *Trade-off*: Product views are written to the database synchronously on the request thread.
+   * *Limitation*: For massive write-heavy environments, this could introduce slight query overhead. In a larger production deployment, view writes should be offloaded to Celery background tasks or an asynchronous message queue.
